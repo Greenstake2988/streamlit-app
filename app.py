@@ -15,9 +15,7 @@ def pagina_carga_en_seg(seg):
         user_registrado.empty()
         st.success('Carga completa')
 
-def si_hay_reposicion():
 
-    print("funciona")
 
 # Define the form fields
 form_fields = {
@@ -135,6 +133,7 @@ if username != "":
                 # Verifica si la solicitud fue exitosa
                 if response.status_code == 200:
                     st.success('Los datos han sido enviados.')
+                    
                 else:
                     st.error('Ha ocurrido un error al enviar los datos.')
         else:
