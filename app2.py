@@ -5,6 +5,7 @@ import time
 
 # Define the API endpoint and request payload
 API_ENDPOINT_USUARIO = 'http://python-docx.valladolid.tecnm.mx:8443/usuario'
+API_ENDPOINT_USUARIOS = 'http://python-docx.valladolid.tecnm.mx:8443/usuarios'
 API_ENDPOINT_JUSTIFICACION = 'http://python-docx.valladolid.tecnm.mx:8443/justificacion'
 
 # Definicion funciones
@@ -54,6 +55,7 @@ if not st.session_state['logged_in']:
         # Make a POST request to the API
         payload = {'username': username}
         response = requests.post(API_ENDPOINT_USUARIO, data=payload)
+
         # If the request is successful, parse the JSON response and fill the form fields
         if response.status_code == 200:
             data = response.json().get('user')
@@ -64,7 +66,14 @@ if not st.session_state['logged_in']:
                 st.warning("El usuario no existe.")
         else:
             st.error("El servicio no esta disponible.")
-            
+
+        # Llamada al API pro todos los usuarios
+        response_users = requests.get(API_ENDPOINT_USUARIOS)
+        if response_users.status_code == 200:
+            data = response_users.json()
+            if data:
+                st.session_state['data_users'] = data
+                
 # Si el usuario ha iniciado sesión, muestra el contenido de la aplicación
 if st.session_state['logged_in']:
     # Aquí iría el resto del código de la aplicación
@@ -127,6 +136,30 @@ if st.session_state['logged_in']:
                     if reposicion:
                         field_data['value'] = st.date_input(field_data['label'],key='fecha_reposicion', label_visibility="collapsed")
             
+            case "nombre_jefe":
+                fname_users = [user["fname"] + " " + user["lname"] for user in st.session_state['data_users']]
+                default_option = ""
+                st.session_state['nombre_jefe'] = st.selectbox(field_data['label'], [default_option] + fname_users)
+                field_data['value'] = st.session_state['nombre_jefe']
+            case "puesto_jefe":
+                puesto_jefe = ""
+                if st.session_state['nombre_jefe']:
+                    full_name = st.session_state['nombre_jefe']
+                    names_list = full_name.split()
+                    if len(names_list) == 4:
+                        first_name = names_list[0] + " " + names_list[1]
+                        last_name = names_list[2] + " " + names_list[3]
+                    else:
+                        first_name = names_list[0] 
+                        last_name = names_list[1] + " " + names_list[2]
+
+                    for user in st.session_state['data_users']:
+                        if user["fname"] == first_name and user["lname"] == last_name:
+                            puesto_jefe = user["position"]
+                            break
+
+                field_data['value'] = st.text_input(field_data['label'], puesto_jefe)
+
             case "tipo":
                 field_data['value'] = st.radio(field_data['label'],('Personal', 'Medica'))
                 st.session_state['tipo_justificacion'] = field_data['value']
