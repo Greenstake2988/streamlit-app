@@ -25,7 +25,6 @@ form_fields = {
     'fecha': {'label': 'Fecha:', 'value': ''},
     'nombre': {'label': 'Nombre:', 'value': ''},
     'puesto': {'label': 'Puesto:', 'value': ''},
-    ###   Informa que se ausento de sus labores:
     'horario_inasistencia_inicio': {'label': 'horario_inasistencia_inicio', 'value': ''},
     'horario_inasistencia_final': {'label': 'horario_inasistencia_final', 'value': ''},
     'fecha_inasistencia': {'label': 'fecha_inasistencia', 'value': ''},
@@ -137,19 +136,31 @@ if st.session_state['logged_in']:
 
     # Agrega un botón para enviar los datos al servidor
     if st.button('Enviar'):
+        
         # Obtiene los valores de los inputs
         form_values = {field_name: field_data['value'] for field_name, field_data in form_fields.items()}
+        
+        # Define la lista de campos requeridos
+        required_fields = ['fecha', 'nombre', 'puesto', 'horario_inasistencia_inicio', 'horario_inasistencia_final', 'fecha_inasistencia', 'motivo', 'nombre_jefe', 'puesto_jefe', 'tipo']
 
-        print (form_values)
-        # Envía los datos al servidor
-        response = make_post_request(API_ENDPOINT_JUSTIFICACION, form_values)
+        # Recorre el diccionario de campos
+        form_complete = True
+        for field_name, field_data in form_values.items():
+            # Si el campo es requerido y está vacío, muestra un mensaje de error y detén la validación
+            if field_name in required_fields and not field_data:
+                st.error(f"El campo '{field_name}' es requerido.")
+                form_complete = False
 
-        # Verifica si la solicitud fue exitosa
-        if response.status_code == 200:
-            st.success('Los datos han sido enviados.')
-            if st.session_state['tipo_justificacion'] == "Personal":
-                st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_personal_modificado.pdf">Abrir el Formato</a>', unsafe_allow_html=True)
+        if form_complete:
+            # Envía los datos al servidor
+            response = make_post_request(API_ENDPOINT_JUSTIFICACION, form_values)
+
+            # Verifica si la solicitud fue exitosa
+            if response.status_code == 200:
+                st.success('Los datos han sido enviados.')
+                if st.session_state['tipo_justificacion'] == "Personal":
+                    st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_personal_modificado.pdf">Abrir el Formato</a>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_medica_modificado.pdf">Abrir el Formato</a>', unsafe_allow_html=True)
             else:
-                st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_medica_modificado.pdf">Abrir el Formato</a>', unsafe_allow_html=True)
-        else:
-            st.error('Ha ocurrido un error al enviar los datos.')
+                st.error('Ha ocurrido un error al enviar los datos.')
