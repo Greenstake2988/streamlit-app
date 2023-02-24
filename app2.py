@@ -2,6 +2,7 @@ import requests
 import streamlit as st
 from datetime import date
 import time
+import streamlit.components.v1 as components
 
 # Define the API endpoint and request payload
 API_ENDPOINT_USUARIO = 'http://python-docx.valladolid.tecnm.mx:8443/usuario'
@@ -187,7 +188,6 @@ if st.session_state['logged_in']:
         if form_complete:
             # Envía los datos al servidor
             response = make_post_request(API_ENDPOINT_JUSTIFICACION, form_values)
-
             # Verifica si la solicitud fue exitosa
             if response.status_code == 200:
                 st.success('Los datos han sido enviados.')
@@ -197,3 +197,9 @@ if st.session_state['logged_in']:
                     st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_medica_modificado.pdf">Abrir el Formato</a>', unsafe_allow_html=True)
             else:
                 st.error('Ha ocurrido un error al enviar los datos.')
+
+            # Obtener el HTML devuelto por Flask
+            html_resultado = response.content.decode('utf-8')
+
+            # Mostrar el HTML en una nueva pestaña del navegador
+            components.html(html_resultado, height=500) 
