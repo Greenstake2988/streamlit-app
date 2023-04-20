@@ -2,13 +2,21 @@ import requests
 import streamlit as st
 from datetime import date
 import time
-import webbrowser
+#import webbrowser
 
-
+#accediendo atravez de la web
 # Define the API endpoint and request payload
-API_ENDPOINT_USUARIO = 'http://python-docx.valladolid.tecnm.mx:8443/usuario'
-API_ENDPOINT_USUARIOS = 'http://python-docx.valladolid.tecnm.mx:8443/usuarios'
-API_ENDPOINT_JUSTIFICACION = 'http://python-docx.valladolid.tecnm.mx:8443/justificacion'
+#API_ENDPOINT_USUARIO = 'http://python-docx.valladolid.tecnm.mx:8443/usuario'
+#API_ENDPOINT_USUARIOS = 'http://python-docx.valladolid.tecnm.mx:8443/usuarios'
+#API_ENDPOINT_JUSTIFICACION = 'http://python-docx.valladolid.tecnm.mx:8443/justificacion'
+
+#accediendo LOCAL
+# Define the API endpoint and request payload
+API_ENDPOINT_USUARIO = 'http://127.0.0.1:3000/usuario'
+API_ENDPOINT_USUARIOS = 'http://127.0.0.1:3000/usuarios'
+API_ENDPOINT_JUSTIFICACION = 'http://127.0.0.1:3000/justificacion'
+
+
 
 # Definicion funciones
 def pagina_carga_en_seg(seg):
@@ -25,6 +33,7 @@ def make_post_request(url, data):
 
 # Define the form fields
 form_fields = {
+    'username': {'label': 'Username:', 'value': ''},
     'fecha': {'label': 'Fecha:', 'value': ''},
     'nombre': {'label': 'Nombre:', 'value': ''},
     'puesto': {'label': 'Puesto:', 'value': ''},
@@ -49,9 +58,10 @@ if 'logged_in' not in st.session_state:
 if not st.session_state['logged_in']:
     # Página 1: ingreso del texto
     titulo_pagina_1 = st.title("Sistema de Formatos Justificacion")
-    encabezado_pagina_1 = st.header("Ingresa tu nombre de usuario ")
+    encabezado_pagina_1 = st.header("Ingresa tu nombre de usuario:")
+    aviso_pagina_1 = st.write("El nombre de tu correo electronico institucional antes del @")
     text_input_username = st.empty()
-    username = text_input_username.text_input("Usuario:")
+    username = text_input_username.text_input("Usuario:", label_visibility="collapsed")
     
     if username != "":
         # Make a POST request to the API
@@ -64,22 +74,26 @@ if not st.session_state['logged_in']:
             if data:
                 st.session_state['logged_in'] = True
                 st.session_state['data_user'] = data
+
+                # Llamada al API pro todos los usuarios
+                response_users = requests.get(API_ENDPOINT_USUARIOS)
+                if response_users.status_code == 200:
+                    data = response_users.json()
+                    if data:
+                        st.session_state['data_users'] = data
+                        #Actualizamos la pagina 
+                        st.experimental_rerun()
+                        
             else:
                 st.warning("El usuario no existe.")
         else:
             st.error("El servicio no esta disponible.")
 
-        # Llamada al API pro todos los usuarios
-        response_users = requests.get(API_ENDPOINT_USUARIOS)
-        if response_users.status_code == 200:
-            data = response_users.json()
-            if data:
-                st.session_state['data_users'] = data
+
                 
 # Si el usuario ha iniciado sesión, muestra el contenido de la aplicación
 if st.session_state['logged_in']:
-    # Aquí iría el resto del código de la aplicación
-    #pagina_carga_en_seg(3)
+
     form_fields['nombre']['value'] = st.session_state['data_user'].get('fname') + " " + st.session_state['data_user'].get('lname')
     form_fields['puesto']['value'] = st.session_state['data_user'].get('position')
     
@@ -166,6 +180,9 @@ if st.session_state['logged_in']:
                 field_data['value'] = st.radio(field_data['label'],('Personal', 'Medica'))
                 st.session_state['tipo_justificacion'] = field_data['value']
 
+            case "username":
+                # Copiamos el nombre de usario en el form
+                field_data['value'] = st.session_state['data_user'].get('username')
             case _:
                 field_data['value']  = st.text_input(field_data['label'], value=field_data['value'])
 
@@ -193,15 +210,17 @@ if st.session_state['logged_in']:
             if response.status_code == 200:
                 st.success('Los datos han sido enviados.')
                 if st.session_state['tipo_justificacion'] == "Personal":
-                    st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_personal_modificado.pdf">Abrir el Formato</a>', unsafe_allow_html=True)
+                    st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_personal_modificado.pdf">Abrir el Formato PDF</a>', unsafe_allow_html=True) 
+                    st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_personal_modificado.docx">Descargar el Formato DOCX</a>', unsafe_allow_html=True)
                 else:
                     st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_medica_modificado.pdf">Abrir el Formato</a>', unsafe_allow_html=True)
+                    st.markdown('<a href="http://python-docx.valladolid.tecnm.mx:8443/static/justificacion_medica_modificado.docx">Descargar el Formato DOCX</a>', unsafe_allow_html=True)
             else:
                 st.error('Ha ocurrido un error al enviar los datos.')
 
            
             # obtener el contenido HTML de la respuesta
-            html = response.content.decode()
+            #html = response.content.decode()
 
             # mostrar el contenido HTML en Streamlit
-            st.markdown(html, unsafe_allow_html=True)
+            #st.markdown(html, unsafe_allow_html=True)
