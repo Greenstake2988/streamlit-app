@@ -59,7 +59,7 @@ if not st.session_state['logged_in']:
     # Página 1: ingreso del texto
     titulo_pagina_1 = st.title("Sistema de Formatos Justificacion")
     encabezado_pagina_1 = st.header("Ingresa tu nombre de usuario:")
-    aviso_pagina_1 = st.write("El nombre de tu correo electronico institucional antes del @")
+    aviso_pagina_1 = st.write("nombre_usuario@ valladolid.tecnm.mx")
     text_input_username = st.empty()
     username = text_input_username.text_input("Usuario:", label_visibility="collapsed")
     
